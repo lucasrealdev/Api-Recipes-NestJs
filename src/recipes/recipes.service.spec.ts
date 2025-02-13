@@ -36,6 +36,7 @@ describe('RecipesService', () => {
     getAllRecipes: jest.fn(),
     findById: jest.fn(),
     saveRecipe: jest.fn(),
+    deleteById: jest.fn()
   };
 
   beforeEach(async () => {
@@ -107,4 +108,34 @@ describe('RecipesService', () => {
       expect(result).toEqual(mockRecipe);
     });
   });
+
+  describe('deleteRecipe', () => {
+    it('should return the deleted recipe', async () => {
+      mockRecipeRepository.deleteById.mockResolvedValue(mockRecipe);
+
+      const result = await recipesService.deleteRecipe(
+        '67ab856bffe06c9d7bf5d872',
+      );
+      expect(result).toEqual(mockRecipe);
+    });
+
+    it('should throw NotFoundException if recipe does not exist', async () => {
+      mockRecipeRepository.deleteById.mockResolvedValue(null);
+
+      await expect(
+        recipesService.deleteRecipe(new mongoose.Types.ObjectId().toString()),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if recipe ID format is invalid', async () => {
+      mockRecipeRepository.deleteById.mockRejectedValue({
+        name: 'CastError', // Nome do erro que o MongoDB lançaria para ID inválido
+      });
+
+      await expect(recipesService.deleteRecipe('invalid-id')).rejects.toThrow(
+        BadRequestException,
+      ); // Espera a exceção BadRequestException
+    });
+  });
+
 });
