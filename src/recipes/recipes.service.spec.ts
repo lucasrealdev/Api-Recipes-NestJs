@@ -36,7 +36,8 @@ describe('RecipesService', () => {
     getAllRecipes: jest.fn(),
     findById: jest.fn(),
     saveRecipe: jest.fn(),
-    deleteById: jest.fn()
+    deleteById: jest.fn(),
+    updateById: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -129,13 +130,47 @@ describe('RecipesService', () => {
 
     it('should throw BadRequestException if recipe ID format is invalid', async () => {
       mockRecipeRepository.deleteById.mockRejectedValue({
-        name: 'CastError', // Nome do erro que o MongoDB lançaria para ID inválido
+        name: 'CastError', 
       });
 
       await expect(recipesService.deleteRecipe('invalid-id')).rejects.toThrow(
         BadRequestException,
-      ); // Espera a exceção BadRequestException
+      );
     });
   });
 
+  describe('updateRecipe', () => {
+    it('should return the updated recipe', async () => {
+      const updatedRecipe = { ...mockRecipe, name: 'Updated Pizza' };
+      mockRecipeRepository.updateById = jest.fn().mockResolvedValue(updatedRecipe);
+  
+      const result = await recipesService.updateRecipe(
+        '67ab856bffe06c9d7bf5d872',
+        { name: 'Updated Pizza' },
+      );
+      expect(result).toEqual(updatedRecipe);
+    });
+  
+    it('should throw NotFoundException if recipe does not exist', async () => {
+      mockRecipeRepository.updateById = jest.fn().mockResolvedValue(null);
+  
+      await expect(
+        recipesService.updateRecipe(
+          new mongoose.Types.ObjectId().toString(),
+          { name: 'Updated Pizza' },
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+  
+    it('should throw BadRequestException if recipe ID format is invalid', async () => {
+      mockRecipeRepository.updateById = jest.fn().mockRejectedValue({
+        name: 'CastError',
+      });
+  
+      await expect(
+        recipesService.updateRecipe('invalid-id', { name: 'Updated Pizza' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+  
 });

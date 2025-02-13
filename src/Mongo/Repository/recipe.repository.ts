@@ -26,4 +26,18 @@ export class RecipeRepository {
   async deleteById(recipeID: string): Promise<Recipe | null> {
     return await this.RecipeModel.findByIdAndDelete(recipeID).select('-__v').exec();
   }
+
+  async updateById(recipeID: string, updateData: Partial<RecipeDTO>): Promise<Recipe | null> {
+    try {
+      const updatedRecipe = await this.RecipeModel.findByIdAndUpdate(
+        recipeID,
+        updateData,
+        { new: true, runValidators: true }
+      ).select('-__v');
+  
+      return updatedRecipe;
+    } catch (error) {
+      return null;
+    }
+  }  
 }

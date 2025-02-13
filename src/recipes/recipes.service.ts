@@ -52,4 +52,20 @@ export class RecipesService {
       throw new NotFoundException('This recipe does not exist');
     }
   }
+
+  async updateRecipe(recipeID: string, updateData: Partial<RecipeDTO>): Promise<Recipe> {
+    try {
+      const updatedRecipe = await this.recipeRepository.updateById(recipeID, updateData);
+      if (!updatedRecipe) {
+        throw new NotFoundException('Recipe not found');
+      }
+      return updatedRecipe;
+    } catch (e) {
+      if (e.name === 'CastError') {
+        throw new BadRequestException('Invalid recipe ID format');
+      }
+      throw new NotFoundException('Recipe not found');
+    }
+  }
+  
 }
