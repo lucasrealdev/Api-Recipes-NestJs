@@ -22,4 +22,8 @@ export class RecipeRepository {
   async findById(RecipeID: string): Promise<Recipe | null> {
     return await this.RecipeModel.findById(RecipeID).select('-__v').exec();
   }
+
+  async deleteById(recipeID: string): Promise<Recipe | null> {
+    return await this.RecipeModel.findByIdAndDelete(recipeID).select('-__v').exec();
+  }
 }

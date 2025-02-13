@@ -37,4 +37,19 @@ export class RecipesService {
   async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe> {
     return await this.recipeRepository.saveRecipe(newRecipe);
   }
+
+  async deleteRecipe(recipeID: string): Promise<Recipe> {
+    try {
+      const deletedRecipe = await this.recipeRepository.deleteById(recipeID);
+      if (!deletedRecipe) {
+        throw new NotFoundException('This recipe does not exist');
+      }
+      return deletedRecipe;
+    } catch (e) {
+      if (e.name === 'CastError') {
+        throw new BadRequestException('Invalid recipe ID format');
+      }
+      throw new NotFoundException('This recipe does not exist');
+    }
+  }
 }

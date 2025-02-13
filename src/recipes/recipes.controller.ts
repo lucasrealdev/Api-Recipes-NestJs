@@ -31,4 +31,9 @@ export class RecipesController {
   async saveRecipe(@Body() newRecipe: RecipeDTO): Promise<Recipe> {
     return await this.recipesService.saveRecipe(newRecipe);
   }
+
+  @Delete(':recipeID')
+  async deleteRecipe(@Param('recipeID') recipeID: string) {
+    return await this.recipesService.deleteRecipe(recipeID);
+  }
 }
