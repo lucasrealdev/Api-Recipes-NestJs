@@ -8,6 +8,9 @@ export class Recipe {
   @Prop({ type: String, required: true })
   name: string;
 
+  @Prop({ type: String, required: true })
+  normalizedName: string;
+
   @Prop({ type: Publisher, required: true })
   publisher: Publisher;
 

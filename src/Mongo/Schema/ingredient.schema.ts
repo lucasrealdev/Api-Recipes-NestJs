@@ -5,6 +5,9 @@ export class Ingredient {
   @Prop({ type: String, required: true, minlength: 2 })
   name: string;
 
+  @Prop({ type: String, required: true, minlength: 2 })
+  normalizedName: string;
+
   @Prop({ type: Number, required: true })
   quantity: number;
 

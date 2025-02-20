@@ -10,11 +10,21 @@ export class RecipeRepository {
     @InjectModel('Recipe') private readonly RecipeModel: Model<Recipe>,
   ) {}
 
-  async getAllRecipes(): Promise<Recipe[]> {
-    return await this.RecipeModel.find().sort({ name: +1 }).select('-__v').exec();
-  }
+async getAllRecipes(filter: any, page: number, limit: number): Promise<Recipe[]> {
+  return await this.RecipeModel.find(filter)
+    .sort({ name: 1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .select('-__v')
+    .exec();
+}
+
+async count(filter: any): Promise<number> {
+  return await this.RecipeModel.countDocuments(filter).exec();
+}
 
   async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe> {
+    console.log(newRecipe);
     const createdRecipe = new this.RecipeModel(newRecipe, { __v: false });
     return createdRecipe.save();
   }

@@ -6,18 +6,57 @@ import {
 import type { Recipe } from 'src/Mongo/Interfaces/recipe.interface';
 import { RecipeRepository } from '../Mongo/Repository/recipe.repository';
 import { RecipeDTO } from './DTO/recipe.dto';
+import type { PaginatedRecipes } from 'src/Mongo/Interfaces/paginatedRecipes.interface';
+import type { IngredientDTO } from './DTO/ingredient.dto';
 
-@Injectable() 
+type RecipeDocument = Omit<RecipeDTO, 'ingredients'> & {
+  normalizedName: string;
+  ingredients: (IngredientDTO & { normalizedName: string })[];
+};
+
+
+@Injectable()
 export class RecipesService {
-  constructor(private readonly recipeRepository: RecipeRepository) {}
+  constructor(private readonly recipeRepository: RecipeRepository) { }
 
-  async getAllRecipes(): Promise<Recipe[]> {
-    const allRecipes = await this.recipeRepository.getAllRecipes();
-
-    if (!allRecipes.length)
-      throw new BadRequestException('There are no recipes registered yet');
-    else return allRecipes;
-  }
+  async getAllRecipes(
+    page: number,
+    limit: number,
+    name?: string,
+    minPrepTime?: number,
+    maxPrepTime?: number,
+    ingredients?: string[],
+  ): Promise<PaginatedRecipes> {
+    const filter: any = {};
+  
+    if (name) {
+      const normalizedSearchName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      filter.normalizedName = { $regex: normalizedSearchName, $options: 'i' };
+    }
+  
+    if (minPrepTime) filter.prepTime = { $gte: minPrepTime };
+    if (maxPrepTime) filter.prepTime = { ...filter.prepTime, $lte: maxPrepTime };
+  
+    if (ingredients) {
+      const ingredientsArray = Array.isArray(ingredients) ? ingredients : [ingredients];
+      const normalizedIngredients = ingredientsArray.map(ing => ing.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+  
+      filter['ingredients.normalizedName'] = {
+        $all: normalizedIngredients.map(ing => new RegExp(ing, 'i')),
+      };
+    }
+  
+    const totalRecipes = await this.recipeRepository.count(filter);
+    const totalPages = Math.ceil(totalRecipes / limit);
+    const recipes = await this.recipeRepository.getAllRecipes(filter, page, limit);
+  
+    return {
+      recipes,
+      totalPages,
+      totalRecipes,
+      currentPage: page,
+    };
+  }  
 
   async getRecipeById(recipeID: string): Promise<Recipe> {
     try {
@@ -35,8 +74,21 @@ export class RecipesService {
   }
 
   async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe> {
-    return await this.recipeRepository.saveRecipe(newRecipe);
-  }
+    const normalizedName = newRecipe.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+    const normalizedIngredients = newRecipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      normalizedName: ingredient.name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+    }));
+  
+    const recipeData: RecipeDocument = {
+      ...newRecipe,
+      normalizedName,
+      ingredients: normalizedIngredients,
+    };
+  
+    return await this.recipeRepository.saveRecipe(recipeData);
+  }  
 
   async deleteRecipe(recipeID: string): Promise<Recipe> {
     try {
@@ -67,5 +119,5 @@ export class RecipesService {
       throw new NotFoundException('Recipe not found');
     }
   }
-  
+
 }

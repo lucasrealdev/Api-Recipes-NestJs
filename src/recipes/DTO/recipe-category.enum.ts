@@ -12,4 +12,7 @@ export enum RecipeCategory {
   GLUTEN_FREE = 'Gluten Free',
   KETO = 'Keto',
   PALEO = 'Paleo',
+  BREAKFAST = 'Breakfast',
+  DRINK = 'Drink',
+  PASTA = 'Pasta'
 }
