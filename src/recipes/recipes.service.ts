@@ -28,35 +28,35 @@ export class RecipesService {
     ingredients?: string[],
   ): Promise<PaginatedRecipes> {
     const filter: any = {};
-  
+
     if (name) {
       const normalizedSearchName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
       filter.normalizedName = { $regex: normalizedSearchName, $options: 'i' };
     }
-  
+
     if (minPrepTime) filter.prepTime = { $gte: minPrepTime };
     if (maxPrepTime) filter.prepTime = { ...filter.prepTime, $lte: maxPrepTime };
-  
+
     if (ingredients) {
       const ingredientsArray = Array.isArray(ingredients) ? ingredients : [ingredients];
       const normalizedIngredients = ingredientsArray.map(ing => ing.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
-  
+
       filter['ingredients.normalizedName'] = {
         $all: normalizedIngredients.map(ing => new RegExp(ing, 'i')),
       };
     }
-  
+
     const totalRecipes = await this.recipeRepository.count(filter);
     const totalPages = Math.ceil(totalRecipes / limit);
     const recipes = await this.recipeRepository.getAllRecipes(filter, page, limit);
-  
+
     return {
       recipes,
       totalPages,
       totalRecipes,
       currentPage: page,
     };
-  }  
+  }
 
   async getRecipeById(recipeID: string): Promise<Recipe> {
     try {
@@ -73,23 +73,6 @@ export class RecipesService {
     }
   }
 
-  async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe> {
-    const normalizedName = newRecipe.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  
-    const normalizedIngredients = newRecipe.ingredients.map((ingredient) => ({
-      ...ingredient,
-      normalizedName: ingredient.name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
-    }));
-  
-    const recipeData: RecipeDocument = {
-      ...newRecipe,
-      normalizedName,
-      ingredients: normalizedIngredients,
-    };
-  
-    return await this.recipeRepository.saveRecipe(recipeData);
-  }  
-
   async deleteRecipe(recipeID: string): Promise<Recipe> {
     try {
       const deletedRecipe = await this.recipeRepository.deleteById(recipeID);
@@ -105,9 +88,45 @@ export class RecipesService {
     }
   }
 
+  async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe> {
+    const normalizedName = newRecipe.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const normalizedIngredients = newRecipe.ingredients.map((ingredient) => ({
+      ...ingredient,
+      normalizedName: ingredient.name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+    }));
+
+    const recipeData: RecipeDocument = {
+      ...newRecipe,
+      normalizedName,
+      ingredients: normalizedIngredients,
+    };
+
+    const saveRecipe = await this.recipeRepository.saveRecipe(recipeData);
+    if (!saveRecipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+    return saveRecipe;
+  }
+
   async updateRecipe(recipeID: string, updateData: Partial<RecipeDTO>): Promise<Recipe> {
     try {
-      const updatedRecipe = await this.recipeRepository.updateById(recipeID, updateData);
+      const updateDataWithNormalization: any = { ...updateData };
+
+      // Normaliza o nome, se foi atualizado
+      if (updateData.name) {
+        updateDataWithNormalization.normalizedName = updateData.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      // Normaliza os ingredientes, se foram atualizados
+      if (updateData.ingredients) {
+        updateDataWithNormalization.ingredients = updateData.ingredients.map((ingredient) => ({
+          ...ingredient,
+          normalizedName: ingredient.name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+        }));
+      }
+
+      const updatedRecipe = await this.recipeRepository.updateById(recipeID, updateDataWithNormalization);
       if (!updatedRecipe) {
         throw new NotFoundException('Recipe not found');
       }
@@ -119,5 +138,4 @@ export class RecipesService {
       throw new NotFoundException('Recipe not found');
     }
   }
-
 }

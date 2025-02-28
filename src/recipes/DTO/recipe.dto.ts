@@ -24,7 +24,7 @@ export class RecipeDTO {
   @MaxLength(100)
   readonly name: string;
 
-  @ApiProperty({ type: [PublisherDTO] })
+  @ApiProperty({ type: PublisherDTO })
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => PublisherDTO)

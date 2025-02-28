@@ -6,7 +6,7 @@ Esta é uma API RESTful de gerenciamento de receitas, desenvolvida com [NestJS](
 
 - **Listar todas as receitas**
   - Suporte a paginação.
-  - Ordenação por tempo de preparo, nome e outros critérios.
+  - Ordenação por tempo de preparo, alfabética.
 - **Obter uma receita pelo ID**
 - **Criar uma nova receita**
 - **Atualizar uma receita existente**

@@ -23,8 +23,7 @@ async count(filter: any): Promise<number> {
   return await this.RecipeModel.countDocuments(filter).exec();
 }
 
-  async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe> {
-    console.log(newRecipe);
+  async saveRecipe(newRecipe: RecipeDTO): Promise<Recipe | null> {
     const createdRecipe = new this.RecipeModel(newRecipe, { __v: false });
     return createdRecipe.save();
   }

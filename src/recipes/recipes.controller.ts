@@ -48,18 +48,19 @@ export class RecipesController {
     return await this.recipesService.getRecipeById(recipeID);
   }
 
+  @Delete(':recipeID')
+  async deleteRecipe(@Param('recipeID') recipeID: string): Promise<Recipe> {
+    return await this.recipesService.deleteRecipe(recipeID);
+  }
+
   @Post()
   @ApiBody({ type: RecipeDTO })
   async saveRecipe(@Body() newRecipe: RecipeDTO): Promise<Recipe> {
     return await this.recipesService.saveRecipe(newRecipe);
   }
 
-  @Delete(':recipeID')
-  async deleteRecipe(@Param('recipeID') recipeID: string): Promise<Recipe> {
-    return await this.recipesService.deleteRecipe(recipeID);
-  }
-
   @Patch(':recipeID')
+  @ApiBody({ type: RecipeDTO })
   async updateRecipe(
     @Param('recipeID') recipeID: string,
     @Body() updateData: Partial<RecipeDTO>,
